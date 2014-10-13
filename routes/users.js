@@ -5,6 +5,14 @@ var User = require('../data/models/user');
 var loadUser = require('./middleware/load_user');
 var async = require('async');
 var maxUsersPerPage = 5;
+
+function sleep(milliseconds) {
+  var start = new Date()
+    .valueOf();
+  while ((new Date()
+    .valueOf() - start) < milliseconds) {}
+}
+
 module.exports = function (app) {
   app.get('/api/users', function (req, res, next) {
     var page = (req.query.page && parseInt(req.query.page, 10)) || 1;
@@ -102,16 +110,20 @@ module.exports = function (app) {
       }
     });
   });
+
+
+  // Endpoints for stats
+
   app.get('/api/users/stats/age-groups', function (req, res) {
     res.json([{
       "key": "< 20",
-      "value": 20
+      "value": 90
     }, {
       "key": "[20, 30)",
-      "value": 20
+      "value": 66
     }, {
       "key": "[30, 40)",
-      "value": 20
+      "value": 45
     }, {
       "key": "[40, 50)",
       "value": 120
@@ -123,54 +135,109 @@ module.exports = function (app) {
       "value": 320
     }, {
       "key": "[70, 80)",
-      "value": 24
+      "value": 78
     }, {
       "key": ">= 80",
-      "value": 20
+      "value": 95
     }]);
   });
-  app.get('/api/users/stats/series-chart-data', function (req, res) {
+
+  app.get('/api/users/stats/activity', function (req, res) {
+    function randomValue() {
+      return Math.random() * 1000 + 500;
+    }
+
+    function randomSample(n) {
+      var i, arr = [];
+      for (i = 0; i < n; i = i + 1) {
+        arr.push(randomValue());
+      }
+      return arr;
+    }
+
     res.json({
-      "timestamp": 1397121646171,
-      "range": {
-        "start": 1394409600000,
-        "end": 1396998000000,
-        "startDate": "2014-03-10T00:00:00.000Z",
-        "endDate": "2014-04-09T00:00:00.000+01:00"
+      "meta": {
+        "startDate": 1394409600000
       },
-      "line": {
-        "total": [600.00, 598.00, 599.00, 600.00, 601.00, 600.00, 599.00, 599.00, 599.00, 595.00, 594.00, 594.00, 597.00, 600.00, 600.00, 600.00, 600.00, 596.00, 594.00, 615.00, 637.00, 657.00, 657.00, 657.00, 653.00, 653.00, 653.00, 658.00, 656.00, 635.00, 615.00],
-        "indirect": [307.00, 306.00, 307.00, 308.00, 309.00, 308.00, 307.00, 307.00, 307.00, 305.00, 304.00, 304.00, 305.00, 307.00, 307.00, 307.00, 308.00, 306.00, 305.00, 316.00, 327.00, 337.00, 337.00, 337.00, 335.00, 335.00, 335.00, 338.00, 336.00, 325.00, 315.00],
-        "direct": [293.00, 292.00, 292.00, 292.00, 292.00, 292.00, 292.00, 292.00, 292.00, 290.00, 290.00, 290.00, 292.00, 293.00, 293.00, 293.00, 292.00, 290.00, 289.00, 299.00, 310.00, 320.00, 320.00, 320.00, 318.00, 318.00, 318.00, 320.00, 320.00, 310.00, 300.00]
+      "data": {
+        "< 20": randomSample(20),
+        "[20, 30)": randomSample(20),
+        "[30, 40)": randomSample(20)
       }
     });
   });
-  app.get('/api/users/stats/bar-chart-data', function (req, res) {
+
+  app.get('/api/users/stats/gender-by-age-groups', function (req, res) {
     res.json([{
-      "key": "A",
+      "key": "< 20",
       "value": [{
-        "key": "influencedSales",
+        "key": "Males",
         "value": 158
       }, {
-        "key": "directSales",
+        "key": "Females",
         "value": 154
       }]
     }, {
-      "key": "B",
+      "key": "[20, 30)",
       "value": [{
-        "key": "influencedSales",
+        "key": "Males",
         "value": 78
       }, {
-        "key": "directSales",
+        "key": "Females",
         "value": 73
       }]
     }, {
-      "key": "C",
+      "key": "[30, 40)",
       "value": [{
-        "key": "influencedSales",
+        "key": "Males",
+        "value": 78
+      }, {
+        "key": "Females",
+        "value": 73
+      }]
+    }, {
+      "key": "[40, 50)",
+      "value": [{
+        "key": "Males",
+        "value": 78
+      }, {
+        "key": "Females",
+        "value": 73
+      }]
+    }, {
+      "key": "[50, 60)",
+      "value": [{
+        "key": "Males",
+        "value": 78
+      }, {
+        "key": "Females",
+        "value": 73
+      }]
+    }, {
+      "key": "[60, 70)",
+      "value": [{
+        "key": "Males",
+        "value": 78
+      }, {
+        "key": "Females",
+        "value": 73
+      }]
+    }, {
+      "key": "[70, 80)",
+      "value": [{
+        "key": "Males",
+        "value": 78
+      }, {
+        "key": "Females",
+        "value": 73
+      }]
+    }, {
+      "key": ">= 80",
+      "value": [{
+        "key": "Males",
         "value": 22
       }, {
-        "key": "directSales",
+        "key": "Females",
         "value": 20
       }]
     }]);
@@ -216,7 +283,7 @@ module.exports = function (app) {
 
 
 
-    User.aggregate({
+    /*User.aggregate({
         $group: {
           _id: '$gender',
           maxBirthday: {
@@ -242,7 +309,7 @@ module.exports = function (app) {
           result: result
         });
 
-      });
+      });*/
 
 
 
